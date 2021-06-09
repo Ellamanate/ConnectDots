@@ -9,7 +9,6 @@ public class DotsConnecter : MonoBehaviour
     [SerializeField] private GameField _gameField;
     [SerializeField] private List<Dot> _dots = new List<Dot>();
     [SerializeField] private Dot _lastDot;
-    [SerializeField] private Dot _penultDot;
     private Camera _camera;
     private bool _clicked;
     [SerializeField] private bool _isSquare;
@@ -41,45 +40,30 @@ public class DotsConnecter : MonoBehaviour
                 _line.TryAddPoint(dot.transform.position, false);
                 _dots.Add(dot);
 
-                _penultDot = _lastDot;
                 _lastDot = dot;
-
-                Debug.Log("Add");
             }
-            else if (_isSquare && dot != null && dot == _squareCreated)
+            else if (_dots.Count > 1 && dot == _dots[_dots.Count - 2])
             {
-                _isSquare = false;
-                _squareCreated = null;
-
                 _line.RemoveLastPoint();
-                _lastDot = _dots[_dots.Count - 1];
-
-                if (_dots.Count > 1)
-                    _penultDot = _dots[_dots.Count - 2];
-
-                Debug.Log("DropSquare");
-            }
-            else if (_dots.Count > 1 && dot == _penultDot && _penultDot != _squareCreated)
-            {
-                _penultDot = _lastDot;
-
-                _line.RemovePoint(_lastDot.transform.position);
-                _dots.Remove(_lastDot);
-
+                _dots.RemoveAt(_dots.Count - 1);
 
                 _lastDot = _dots[_dots.Count - 1];
 
-                Debug.Log("Remove");
+                if (_isSquare && dot != null && dot == _squareCreated)
+                {
+                    _isSquare = false;
+                    _squareCreated = null;
+                }
             }
             else if (!_isSquare && IsSquare(dot))
             {
-                _line.TryAddPoint(dot.transform.position, true);
-
-                _penultDot = _lastDot;
-                _lastDot = dot;
-
+                _squareCreated = _dots[_dots.Count - 1];
                 _isSquare = true;
-                _squareCreated = _penultDot;
+
+                _line.TryAddPoint(dot.transform.position, true);
+                _dots.Add(dot);
+
+                _lastDot = dot;
             }
         }
 
@@ -88,12 +72,7 @@ public class DotsConnecter : MonoBehaviour
 
     private bool IsSquare(Dot dot)
     {
-        return _dots.Count > 1 && _dots.Contains(dot) && dot != _penultDot && dot != _lastDot && CheckCoords(dot, _lastDot);
-    }
-
-    private void ReleaseSquare()
-    {
-        Debug.Log("ReleaseSquare");
+        return _dots.Count > 1 && _dots.Contains(dot) && dot != _dots[_dots.Count - 1] && dot != _lastDot && CheckCoords(dot, _lastDot);
     }
 
     private void StartLine(Dot dot)
@@ -108,17 +87,22 @@ public class DotsConnecter : MonoBehaviour
 
     private void ReleaseLine()
     {
-        if (_dots.Count > 1)
+        if (_isSquare)
+        {
+            _gameField.Square(_dots[0].ColorInfo);
+        }
+        else if(_dots.Count > 1)
+        {
             _gameField.DeleteDots(_dots.ToArray());
+        }
 
         _line.StopLine();
         _dots.Clear();
-        _lastDot = null;
 
         _clicked = false;
-
-        if (_isSquare)
-            ReleaseSquare();
+        _isSquare = false;
+        _squareCreated = null;
+        _lastDot = null;
     }
 
     private bool MouseOverDot(out Dot dot)

@@ -24,6 +24,21 @@ public class GameField : MonoBehaviour
         StartCoroutine(Grounding());
     }
 
+    public void Square(ColorInfo colorInfo)
+    {
+        foreach (Dot dot in _dots)
+        {
+            if (dot.ColorInfo.Id == colorInfo.Id)
+            {
+                _dots[dot.X, dot.Y] = null;
+
+                Destroy(dot.gameObject);
+            }
+        }
+
+        StartCoroutine(Grounding());
+    }
+
     private void Awake()
     {
         _dots = new Dot[_width, _height];
