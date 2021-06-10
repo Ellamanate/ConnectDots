@@ -5,16 +5,19 @@ using UnityEngine;
 public class TurnsCounter : MonoBehaviour
 {
     [SerializeField] private int _startTurns;
-    private int _availableTurns;
+    [SerializeField] private static int _availableTurns;
 
     private static EventAggregator<int> _onChangeAvailableTurns = new EventAggregator<int>();
 
     public static void SubscribeChangeAvailableTurns(Action<int> callback) => _onChangeAvailableTurns.Subscribe(callback);
     public static void UnsubscribeChangeAvailableTurns(Action<int> callback) => _onChangeAvailableTurns.UnSubscribe(callback);
+    public static int AvailableTurns => _availableTurns;
 
     private void Awake()
     {
         _availableTurns = _startTurns;
+
+        _onChangeAvailableTurns.Publish(_availableTurns);
     }
 
     private void OnEnable()
@@ -27,6 +30,8 @@ public class TurnsCounter : MonoBehaviour
     {
         GameField.UnsubscribeEndTurn(OnEndTurn);
         PauseMenu.UnsubscribeRestart(OnRestart);
+
+        _availableTurns = 0;
     }
 
     private void OnEndTurn()

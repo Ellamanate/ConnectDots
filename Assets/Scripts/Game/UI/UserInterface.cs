@@ -15,26 +15,27 @@ public class UserInterface : MonoBehaviour
     public static void SubscribeMenuClick(UnityAction callback) => _onMenuClick.AddListener(callback);
     public static void UnsubscribeMenuClick(UnityAction callback) => _onMenuClick.AddListener(callback);
 
-
     private void Awake()
     {
         _menu.onClick.AddListener(_onMenuClick.Invoke);
+        UpdateTurns(TurnsCounter.AvailableTurns);
+        UpdateScore(ScoreCounter.Points);
     }
 
     private void OnEnable()
     {
+        TurnsCounter.SubscribeChangeAvailableTurns(UpdateTurns);
         ScoreCounter.SubscribeChangePoints(UpdateScore);
         Serialyzer.SubscribeTryChangeBestScore(UpdateBestScore);
-        TurnsCounter.SubscribeChangeAvailableTurns(UpdateTurns);
         GameState.SubscribeGameOver(OnGameOver);
         PauseMenu.SubscribeRestart(OnRestart);
     }
 
     private void OnDisable()
     {
+        TurnsCounter.UnsubscribeChangeAvailableTurns(UpdateTurns);
         ScoreCounter.UnsubscribeChangePoints(UpdateScore);
         Serialyzer.UnsubscribeTryChangeBestScore(UpdateBestScore);
-        TurnsCounter.UnsubscribeChangeAvailableTurns(UpdateTurns);
         GameState.UnsubscribeGameOver(OnGameOver);
         PauseMenu.UnsubscribeRestart(OnRestart);
     }
@@ -56,7 +57,7 @@ public class UserInterface : MonoBehaviour
 
     private void OnGameOver()
     {
-        _pauseMenu.UpdateTitle("TURNS OVER");
+        _pauseMenu.UpdateTitle("NO MORE TURNS");
         _pauseMenu.gameObject.SetActive(true);
     }
 

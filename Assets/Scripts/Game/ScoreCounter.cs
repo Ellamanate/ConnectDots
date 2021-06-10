@@ -4,11 +4,17 @@ using System;
 
 public class ScoreCounter : MonoBehaviour
 {
-    [SerializeField] private int _points;
+    [SerializeField] private static int _points;
 
     private static readonly EventAggregator<int> _onChangePoints = new EventAggregator<int>();
     public static void SubscribeChangePoints(Action<int> callback) => _onChangePoints.Subscribe(callback);
     public static void UnsubscribeChangePoints(Action<int> callback) => _onChangePoints.UnSubscribe(callback);
+    public static int Points => _points;
+
+    private void Awake()
+    {
+        _onChangePoints.Publish(_points);
+    }
 
     private void OnEnable()
     {
@@ -24,6 +30,8 @@ public class ScoreCounter : MonoBehaviour
         GameState.UnsubscribeGameOver(Save);
         GameState.UnsubscribeExit(Save);
         PauseMenu.UnsubscribeRestart(OnRestart);
+
+        _points = 0;
     }
 
     private void OnApplicationPause(bool pause)
