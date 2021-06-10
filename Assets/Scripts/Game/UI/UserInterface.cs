@@ -1,38 +1,47 @@
 ﻿using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 
 
 public class UserInterface : MonoBehaviour
 {
     [SerializeField] private Button _menu;
     [SerializeField] private Text _score;
+    [SerializeField] private Text _turns;
     [SerializeField] private PauseMenu _pauseMenu;
+
+    private static readonly UnityEvent _onMenuClick = new UnityEvent();
+
+    public static void SubscribeMenuClick(UnityAction callback) => _onMenuClick.AddListener(callback);
+    public static void UnsubscribeMenuClick(UnityAction callback) => _onMenuClick.AddListener(callback);
+
 
     private void Awake()
     {
-        _menu.onClick.AddListener(ToMenu);
+        _menu.onClick.AddListener(_onMenuClick.Invoke);
     }
 
     private void OnEnable()
     {
-        Events.OnChangePoints.Subscribe(UpdateScore);
-        Events.OnGameOver.AddListener(OnGameOver);
-        Events.OnRestart.AddListener(OnRestart);
+        ScoreCounter.SubscribeChangePoints(UpdateScore);
+        Serialyzer.SubscribeTryChangeBestScore(UpdateBestScore);
+        TurnsCounter.SubscribeChangeAvailableTurns(UpdateTurns);
+        GameState.SubscribeGameOver(OnGameOver);
+        PauseMenu.SubscribeRestart(OnRestart);
     }
 
     private void OnDisable()
     {
-        Events.OnChangePoints.UnSubscribe(UpdateScore);
-        Events.OnGameOver.RemoveListener(OnGameOver);
-        Events.OnRestart.RemoveListener(OnRestart);
+        ScoreCounter.UnsubscribeChangePoints(UpdateScore);
+        Serialyzer.UnsubscribeTryChangeBestScore(UpdateBestScore);
+        TurnsCounter.UnsubscribeChangeAvailableTurns(UpdateTurns);
+        GameState.UnsubscribeGameOver(OnGameOver);
+        PauseMenu.UnsubscribeRestart(OnRestart);
     }
 
-    private void ToMenu()
+    private void UpdateTurns(int turns)
     {
-        Events.OnExit.Invoke();
-
-        SceneManager.LoadScene("Menu");
+        _turns.text = "TURNS : " + turns.ToString();
     }
 
     private void UpdateScore(int score)
@@ -40,10 +49,14 @@ public class UserInterface : MonoBehaviour
         _score.text = "SCORE : " + score.ToString();
     }
 
+    private void UpdateBestScore(int bestScore)
+    {
+        _pauseMenu.UpdateScore(_score.text, "BEST : " + bestScore.ToString());
+    }
+
     private void OnGameOver()
     {
         _pauseMenu.UpdateTitle("TURNS OVER");
-        _pauseMenu.UpdateScore(_score.text, "BEST : " + Serialyzer.LoadBestScore().ToString());
         _pauseMenu.gameObject.SetActive(true);
     }
 

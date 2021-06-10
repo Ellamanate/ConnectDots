@@ -1,5 +1,8 @@
+using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Events;
+using Random = UnityEngine.Random;
 
 
 public class GameField : MonoBehaviour
@@ -11,6 +14,14 @@ public class GameField : MonoBehaviour
     [SerializeField] private float _spawnLineDelay;
     private Dot[,] _dots;
     private Vector3 offset;
+
+    private static readonly EventAggregator<Dot> _onDeleteDot = new EventAggregator<Dot>();
+    private static readonly UnityEvent _onEndTurn = new UnityEvent();
+
+    public static void SubscribeDotDelete(Action<Dot> callback) => _onDeleteDot.Subscribe(callback);
+    public static void UnsubscribeDotDelete(Action<Dot> callback) => _onDeleteDot.UnSubscribe(callback);
+    public static void SubscribeEndTurn(UnityAction callback) => _onEndTurn.AddListener(callback);
+    public static void UnsubscribeEndTurn(UnityAction callback) => _onEndTurn.AddListener(callback);
 
     private void Awake()
     {
@@ -24,18 +35,18 @@ public class GameField : MonoBehaviour
 
     private void OnEnable()
     {
-        Events.OnLineRelease.Subscribe(DeleteDots);
-        Events.OnSquareRelease.Subscribe(OnSquareRelease);
-        Events.OnGameOver.AddListener(OnGameOver);
-        Events.OnRestart.AddListener(OnRestart);
+        DotsConnecter.SubscribeLineRelease(DeleteDots);
+        DotsConnecter.SubscribeSquareRelease(OnSquareRelease);
+        GameState.SubscribeGameOver(OnGameOver);
+        PauseMenu.SubscribeRestart(OnRestart);
     }
 
     private void OnDisable()
     {
-        Events.OnLineRelease.UnSubscribe(DeleteDots);
-        Events.OnSquareRelease.UnSubscribe(OnSquareRelease);
-        Events.OnGameOver.RemoveListener(OnGameOver);
-        Events.OnRestart.RemoveListener(OnRestart);
+        DotsConnecter.UnsubscribeLineRelease(DeleteDots);
+        DotsConnecter.UnsubscribeSquareRelease(OnSquareRelease);
+        GameState.UnsubscribeGameOver(OnGameOver);
+        PauseMenu.UnsubscribeRestart(OnRestart);
     }
 
     private IEnumerator CreateDots()
@@ -93,7 +104,7 @@ public class GameField : MonoBehaviour
 
         StartCoroutine(Grounding());
 
-        Events.OnEndTurn.Invoke();
+        _onEndTurn.Invoke();
     }
 
     private void OnSquareRelease(ColorInfo colorInfo)
@@ -106,14 +117,14 @@ public class GameField : MonoBehaviour
 
         StartCoroutine(Grounding());
 
-        Events.OnEndTurn.Invoke();
+        _onEndTurn.Invoke();
     }
 
     private void DeleteDot(Dot dot)
     {
         _dots[dot.X, dot.Y] = null;
 
-        Events.OnDeleteDot.Publish(dot);
+        _onDeleteDot.Publish(dot);
 
         Destroy(dot.gameObject);
     }

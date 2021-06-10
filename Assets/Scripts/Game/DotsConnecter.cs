@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using Extensions;
 using System.Collections.Generic;
+using System;
 
 
 public class DotsConnecter : MonoBehaviour
@@ -12,6 +13,14 @@ public class DotsConnecter : MonoBehaviour
     private Camera _camera;
     private bool _clicked;
     private bool _isSquare;
+
+    private static readonly EventAggregator<Dot[]> _onLineRelease = new EventAggregator<Dot[]>();
+    private static readonly EventAggregator<ColorInfo> _onSquareRelease = new EventAggregator<ColorInfo>();
+
+    public static void SubscribeLineRelease(Action<Dot[]> callback) => _onLineRelease.Subscribe(callback);
+    public static void UnsubscribeLineRelease(Action<Dot[]> callback) => _onLineRelease.UnSubscribe(callback);
+    public static void SubscribeSquareRelease(Action<ColorInfo> callback) => _onSquareRelease.Subscribe(callback);
+    public static void UnsubscribeSquareRelease(Action<ColorInfo> callback) => _onSquareRelease.UnSubscribe(callback);
 
     private void Awake()
     {
@@ -102,11 +111,11 @@ public class DotsConnecter : MonoBehaviour
     {
         if (_isSquare)
         {
-            Events.OnSquareRelease.Publish(_dots[0].ColorInfo);
+            _onSquareRelease.Publish(_dots[0].ColorInfo);
         }
         else if(_dots.Count > 1)
         {
-            Events.OnLineRelease.Publish(_dots.ToArray());
+            _onLineRelease.Publish(_dots.ToArray());
         }
 
         _line.StopLine();

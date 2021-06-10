@@ -1,24 +1,29 @@
 ﻿using UnityEngine;
+using System;
 
 
 public class ScoreCounter : MonoBehaviour
 {
     [SerializeField] private int _points;
 
+    private static readonly EventAggregator<int> _onChangePoints = new EventAggregator<int>();
+    public static void SubscribeChangePoints(Action<int> callback) => _onChangePoints.Subscribe(callback);
+    public static void UnsubscribeChangePoints(Action<int> callback) => _onChangePoints.UnSubscribe(callback);
+
     private void OnEnable()
     {
-        Events.OnDeleteDot.Subscribe(AddPoints);
-        Events.OnExit.AddListener(Save);
-        Events.OnGameOver.AddListener(Save);
-        Events.OnRestart.AddListener(OnRestart);
+        GameField.SubscribeDotDelete(AddPoints);
+        GameState.SubscribeGameOver(Save);
+        GameState.SubscribeExit(Save);
+        PauseMenu.SubscribeRestart(OnRestart);
     }
 
     private void OnDisable()
     {
-        Events.OnDeleteDot.UnSubscribe(AddPoints);
-        Events.OnExit.RemoveListener(Save);
-        Events.OnGameOver.RemoveListener(Save);
-        Events.OnRestart.RemoveListener(OnRestart);
+        GameField.UnsubscribeDotDelete(AddPoints);
+        GameState.UnsubscribeGameOver(Save);
+        GameState.UnsubscribeExit(Save);
+        PauseMenu.UnsubscribeRestart(OnRestart);
     }
 
     private void OnApplicationPause(bool pause)
@@ -33,13 +38,13 @@ public class ScoreCounter : MonoBehaviour
     {
         _points++;
 
-        Events.OnChangePoints.Publish(_points);
+        _onChangePoints.Publish(_points);
     }
 
     private void OnRestart()
     {
         _points = 0;
 
-        Events.OnChangePoints.Publish(_points);
+        _onChangePoints.Publish(_points);
     }
 }

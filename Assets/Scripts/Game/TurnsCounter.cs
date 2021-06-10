@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿using System;
 using UnityEngine;
 
 
@@ -7,6 +7,11 @@ public class TurnsCounter : MonoBehaviour
     [SerializeField] private int _startTurns;
     private int _availableTurns;
 
+    private static EventAggregator<int> _onChangeAvailableTurns = new EventAggregator<int>();
+
+    public static void SubscribeChangeAvailableTurns(Action<int> callback) => _onChangeAvailableTurns.Subscribe(callback);
+    public static void UnsubscribeChangeAvailableTurns(Action<int> callback) => _onChangeAvailableTurns.UnSubscribe(callback);
+
     private void Awake()
     {
         _availableTurns = _startTurns;
@@ -14,31 +19,27 @@ public class TurnsCounter : MonoBehaviour
 
     private void OnEnable()
     {
-        Events.OnEndTurn.AddListener(OnEndTurn);
-        Events.OnRestart.AddListener(OnRestart);
+        GameField.SubscribeEndTurn(OnEndTurn);
+        PauseMenu.SubscribeRestart(OnRestart);
     }
 
     private void OnDisable()
     {
-        Events.OnEndTurn.RemoveListener(OnEndTurn);
-        Events.OnRestart.RemoveListener(OnRestart);
+        GameField.UnsubscribeEndTurn(OnEndTurn);
+        PauseMenu.UnsubscribeRestart(OnRestart);
     }
 
     private void OnEndTurn()
     {
         _availableTurns--;
 
-        if (_availableTurns <= 0)
-            GameOver();
-    }
-
-    private void GameOver()
-    {
-        Events.OnGameOver.Invoke();
+        _onChangeAvailableTurns.Publish(_availableTurns);
     }
 
     private void OnRestart()
     {
         _availableTurns = _startTurns;
+
+        _onChangeAvailableTurns.Publish(_availableTurns);
     }
 }
