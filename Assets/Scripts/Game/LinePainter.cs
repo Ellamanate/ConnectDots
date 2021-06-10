@@ -7,9 +7,9 @@ public class LinePainter : MonoBehaviour
 {
     [SerializeField] private LineFactory _lineFactory;
     [SerializeField] private float _lineWidth;
-    [SerializeField] private List<Vector2> _points = new List<Vector2>();
+    private List<Vector2> _points = new List<Vector2>();
     private Camera _camera;
-    [SerializeField] private Line drawnLine;
+    private Line drawnLine;
     private Color _color;
 
     public void Draw()
