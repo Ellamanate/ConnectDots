@@ -4,32 +4,32 @@ using UnityEngine;
 
 public class TurnsCounter : MonoBehaviour
 {
+    public event Action<int> OnChangeAvailableTurns;
+
+    [SerializeField] private PauseMenu _pause;
+    [SerializeField] private GameField _field;
     [SerializeField] private int _startTurns;
     [SerializeField] private static int _availableTurns;
 
-    private static EventAggregator<int> _onChangeAvailableTurns = new EventAggregator<int>();
-
-    public static void SubscribeChangeAvailableTurns(Action<int> callback) => _onChangeAvailableTurns.Subscribe(callback);
-    public static void UnsubscribeChangeAvailableTurns(Action<int> callback) => _onChangeAvailableTurns.UnSubscribe(callback);
-    public static int AvailableTurns => _availableTurns;
+    public int AvailableTurns => _availableTurns;
 
     private void Awake()
     {
         _availableTurns = _startTurns;
 
-        _onChangeAvailableTurns.Publish(_availableTurns);
+        OnChangeAvailableTurns?.Invoke(_availableTurns);
     }
 
     private void OnEnable()
     {
-        GameField.SubscribeEndTurn(OnEndTurn);
-        PauseMenu.SubscribeRestart(OnRestart);
+        _field.OnEndTurn += OnEndTurn;
+        _pause.OnRestart += OnRestart;
     }
 
     private void OnDisable()
     {
-        GameField.UnsubscribeEndTurn(OnEndTurn);
-        PauseMenu.UnsubscribeRestart(OnRestart);
+        _field.OnEndTurn -= OnEndTurn;
+        _pause.OnRestart -= OnRestart;
 
         _availableTurns = 0;
     }
@@ -38,13 +38,13 @@ public class TurnsCounter : MonoBehaviour
     {
         _availableTurns--;
 
-        _onChangeAvailableTurns.Publish(_availableTurns);
+        OnChangeAvailableTurns?.Invoke(_availableTurns);
     }
 
     private void OnRestart()
     {
         _availableTurns = _startTurns;
 
-        _onChangeAvailableTurns.Publish(_availableTurns);
+        OnChangeAvailableTurns?.Invoke(_availableTurns);
     }
 }

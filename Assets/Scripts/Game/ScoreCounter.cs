@@ -4,32 +4,34 @@ using System;
 
 public class ScoreCounter : MonoBehaviour
 {
+    public event Action<int> OnChangePoints;
+
+    [SerializeField] private PauseMenu _pause;
+    [SerializeField] private GameField _field;
+    [SerializeField] private GameState _gameState;
     [SerializeField] private static int _points;
 
-    private static readonly EventAggregator<int> _onChangePoints = new EventAggregator<int>();
-    public static void SubscribeChangePoints(Action<int> callback) => _onChangePoints.Subscribe(callback);
-    public static void UnsubscribeChangePoints(Action<int> callback) => _onChangePoints.UnSubscribe(callback);
-    public static int Points => _points;
+    public int Points => _points;
 
     private void Awake()
     {
-        _onChangePoints.Publish(_points);
+        OnChangePoints?.Invoke(_points);
     }
 
     private void OnEnable()
     {
-        GameField.SubscribeDotDelete(AddPoints);
-        GameState.SubscribeGameOver(Save);
-        GameState.SubscribeExit(Save);
-        PauseMenu.SubscribeRestart(OnRestart);
+        _field.OnDeleteDot += AddPoints;
+        _gameState.OnGameOver += Save;
+        _gameState.OnExit += Save;
+        _pause.OnRestart += OnRestart;
     }
 
     private void OnDisable()
     {
-        GameField.UnsubscribeDotDelete(AddPoints);
-        GameState.UnsubscribeGameOver(Save);
-        GameState.UnsubscribeExit(Save);
-        PauseMenu.UnsubscribeRestart(OnRestart);
+        _field.OnDeleteDot -= AddPoints;
+        _gameState.OnGameOver -= Save;
+        _gameState.OnExit -= Save;
+        _pause.OnRestart -= OnRestart;
 
         _points = 0;
     }
@@ -46,13 +48,13 @@ public class ScoreCounter : MonoBehaviour
     {
         _points++;
 
-        _onChangePoints.Publish(_points);
+        OnChangePoints?.Invoke(_points);
     }
 
     private void OnRestart()
     {
         _points = 0;
 
-        _onChangePoints.Publish(_points);
+        OnChangePoints?.Invoke(_points);
     }
 }

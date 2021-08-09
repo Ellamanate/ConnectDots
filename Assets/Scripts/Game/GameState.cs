@@ -1,39 +1,37 @@
-﻿using UnityEngine;
-using UnityEngine.Events;
+﻿using System;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 
 public class GameState : MonoBehaviour
 {
-    private static readonly UnityEvent _onGameOver = new UnityEvent();
-    private static readonly UnityEvent _onExit = new UnityEvent();
+    public event Action OnGameOver;
+    public event Action OnExit;
 
-    public static void SubscribeGameOver(UnityAction callback) => _onGameOver.AddListener(callback);
-    public static void UnsubscribeGameOver(UnityAction callback) => _onGameOver.AddListener(callback);
-    public static void SubscribeExit(UnityAction callback) => _onExit.AddListener(callback);
-    public static void UnsubscribeExit(UnityAction callback) => _onExit.AddListener(callback);
+    [SerializeField] private UserInterface _userInterface;
+    [SerializeField] private TurnsCounter _turnsCounter;
 
     private void OnEnable()
     {
-        UserInterface.SubscribeMenuClick(ToMenu);
-        TurnsCounter.SubscribeChangeAvailableTurns(CheckTurns);
+        _userInterface.OnMenuClick += ToMenu;
+        _turnsCounter.OnChangeAvailableTurns += CheckTurns;
     }
 
     private void OnDisable()
     {
-        UserInterface.UnsubscribeMenuClick(ToMenu);
-        TurnsCounter.UnsubscribeChangeAvailableTurns(CheckTurns);
+        _userInterface.OnMenuClick -= ToMenu;
+        _turnsCounter.OnChangeAvailableTurns -= CheckTurns;
     }
 
     private void CheckTurns(int turns)
     {
         if (turns <= 0)
-            _onGameOver.Invoke();
+            OnGameOver?.Invoke();
     }
 
     private void ToMenu()
     {
-        _onExit.Invoke();
+        OnExit?.Invoke();
 
         SceneManager.LoadScene("Menu");
     }

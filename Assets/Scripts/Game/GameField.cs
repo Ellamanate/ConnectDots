@@ -7,21 +7,19 @@ using Random = UnityEngine.Random;
 
 public class GameField : MonoBehaviour
 {
-    [SerializeField] private Dot _dot;
+    public event Action<Dot> OnDeleteDot;
+    public event Action OnEndTurn;
+
+    [SerializeField] private Dot _dotPrefab;
+    [SerializeField] private DotsConnecter _connecter;
+    [SerializeField] private GameState _gameState;
+    [SerializeField] private PauseMenu _pause;
     [SerializeField] private Palette _palette;
     [SerializeField] private int _width;
     [SerializeField] private int _height;
     [SerializeField] private float _spawnLineDelay;
     private Dot[,] _dots;
     private Vector3 offset;
-
-    private static readonly EventAggregator<Dot> _onDeleteDot = new EventAggregator<Dot>();
-    private static readonly UnityEvent _onEndTurn = new UnityEvent();
-
-    public static void SubscribeDotDelete(Action<Dot> callback) => _onDeleteDot.Subscribe(callback);
-    public static void UnsubscribeDotDelete(Action<Dot> callback) => _onDeleteDot.UnSubscribe(callback);
-    public static void SubscribeEndTurn(UnityAction callback) => _onEndTurn.AddListener(callback);
-    public static void UnsubscribeEndTurn(UnityAction callback) => _onEndTurn.AddListener(callback);
 
     private void Awake()
     {
@@ -35,18 +33,18 @@ public class GameField : MonoBehaviour
 
     private void OnEnable()
     {
-        DotsConnecter.SubscribeLineRelease(DeleteDots);
-        DotsConnecter.SubscribeSquareRelease(OnSquareRelease);
-        GameState.SubscribeGameOver(OnGameOver);
-        PauseMenu.SubscribeRestart(OnRestart);
+        _connecter.OnLineRelease += DeleteDots;
+        _connecter.OnSquareRelease += OnSquareRelease;
+        _gameState.OnGameOver += OnGameOver;
+        _pause.OnRestart += Restart;
     }
 
     private void OnDisable()
     {
-        DotsConnecter.UnsubscribeLineRelease(DeleteDots);
-        DotsConnecter.UnsubscribeSquareRelease(OnSquareRelease);
-        GameState.UnsubscribeGameOver(OnGameOver);
-        PauseMenu.UnsubscribeRestart(OnRestart);
+        _connecter.OnLineRelease -= DeleteDots;
+        _connecter.OnSquareRelease -= OnSquareRelease;
+        _gameState.OnGameOver -= OnGameOver;
+        _pause.OnRestart -= Restart;
     }
 
     private IEnumerator CreateDots()
@@ -63,7 +61,7 @@ public class GameField : MonoBehaviour
         {
             if (_dots[x, y] == null)
             {
-                _dots[x, y] = Dot.Create(_dot, transform, x, y, _palette.Colors[Random.Range(0, _palette.Colors.Length)]);
+                _dots[x, y] = Dot.Create(_dotPrefab, transform, x, y, _palette.Colors[Random.Range(0, _palette.Colors.Length)]);
                 lineIsFull = false;
             }
         }
@@ -104,7 +102,7 @@ public class GameField : MonoBehaviour
 
         StartCoroutine(Grounding());
 
-        _onEndTurn.Invoke();
+        OnEndTurn?.Invoke();
     }
 
     private void OnSquareRelease(ColorInfo colorInfo)
@@ -117,14 +115,14 @@ public class GameField : MonoBehaviour
 
         StartCoroutine(Grounding());
 
-        _onEndTurn.Invoke();
+        OnEndTurn?.Invoke();
     }
 
     private void DeleteDot(Dot dot)
     {
         _dots[dot.X, dot.Y] = null;
 
-        _onDeleteDot.Publish(dot);
+        OnDeleteDot?.Invoke(dot);
 
         Destroy(dot.gameObject);
     }
@@ -151,7 +149,7 @@ public class GameField : MonoBehaviour
         ClearField();
     }
 
-    private void OnRestart()
+    private void Restart()
     {
         StartCoroutine(CreateDots());
     }

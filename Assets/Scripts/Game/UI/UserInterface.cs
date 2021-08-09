@@ -1,43 +1,43 @@
-﻿using UnityEngine;
-using UnityEngine.Events;
+﻿using System;
+using UnityEngine;
 using UnityEngine.UI;
 
 
 public class UserInterface : MonoBehaviour
 {
+    public event Action OnMenuClick;
+
     [SerializeField] private Button _menu;
     [SerializeField] private Text _score;
     [SerializeField] private Text _turns;
     [SerializeField] private PauseMenu _pauseMenu;
-
-    private static readonly UnityEvent _onMenuClick = new UnityEvent();
-
-    public static void SubscribeMenuClick(UnityAction callback) => _onMenuClick.AddListener(callback);
-    public static void UnsubscribeMenuClick(UnityAction callback) => _onMenuClick.AddListener(callback);
+    [SerializeField] private TurnsCounter _turnsCounter;
+    [SerializeField] private ScoreCounter _scoreCounter;
+    [SerializeField] private GameState _gameState;
 
     private void Awake()
     {
-        _menu.onClick.AddListener(_onMenuClick.Invoke);
-        UpdateTurns(TurnsCounter.AvailableTurns);
-        UpdateScore(ScoreCounter.Points);
+        _menu.onClick.AddListener(() => OnMenuClick.Invoke());
+        UpdateTurns(_turnsCounter.AvailableTurns);
+        UpdateScore(_scoreCounter.Points);
     }
 
     private void OnEnable()
     {
-        TurnsCounter.SubscribeChangeAvailableTurns(UpdateTurns);
-        ScoreCounter.SubscribeChangePoints(UpdateScore);
-        Serialyzer.SubscribeTryChangeBestScore(UpdateBestScore);
-        GameState.SubscribeGameOver(OnGameOver);
-        PauseMenu.SubscribeRestart(OnRestart);
+        _turnsCounter.OnChangeAvailableTurns += UpdateTurns;
+        _scoreCounter.OnChangePoints += UpdateScore;
+        _gameState.OnGameOver += OnGameOver;
+        _pauseMenu.OnRestart += OnRestart;
+        Serialyzer.OnTryChangeBestScore += UpdateBestScore;
     }
 
     private void OnDisable()
     {
-        TurnsCounter.UnsubscribeChangeAvailableTurns(UpdateTurns);
-        ScoreCounter.UnsubscribeChangePoints(UpdateScore);
-        Serialyzer.UnsubscribeTryChangeBestScore(UpdateBestScore);
-        GameState.UnsubscribeGameOver(OnGameOver);
-        PauseMenu.UnsubscribeRestart(OnRestart);
+        _turnsCounter.OnChangeAvailableTurns -= UpdateTurns;
+        _scoreCounter.OnChangePoints -= UpdateScore;
+        _gameState.OnGameOver -= OnGameOver;
+        _pauseMenu.OnRestart -= OnRestart;
+        Serialyzer.OnTryChangeBestScore -= UpdateBestScore;
     }
 
     private void UpdateTurns(int turns)

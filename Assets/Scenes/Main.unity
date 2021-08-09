@@ -752,8 +752,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1ef260867bb4fc4cbd5095d4049d6aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _pause: {fileID: 364496966}
+  _field: {fileID: 1752773509}
   _startTurns: 30
-  _availableTurns: 0
 --- !u!114 &563490828
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -766,7 +767,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b512bd6f94d6b140bb24bf3d6239d58, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _points: 0
+  _pause: {fileID: 364496966}
+  _field: {fileID: 1752773509}
+  _gameState: {fileID: 1515515946}
 --- !u!4 &563490829
 Transform:
   m_ObjectHideFlags: 0
@@ -1047,6 +1050,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e4f3c280f502c043ab37eb9822ebc8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _userInterface: {fileID: 2022245662}
+  _turnsCounter: {fileID: 563490827}
 --- !u!4 &1515515947
 Transform:
   m_ObjectHideFlags: 0
@@ -1388,7 +1393,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b45eef8008fca834596a628086195940, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _dot: {fileID: 7790522701088441499, guid: 281d32dcf76fe034f8acff86a0563a76, type: 3}
+  _dotPrefab: {fileID: 7790522701088441499, guid: 281d32dcf76fe034f8acff86a0563a76, type: 3}
+  _connecter: {fileID: 1603802914}
+  _gameState: {fileID: 1515515946}
+  _pause: {fileID: 364496966}
   _palette: {fileID: 11400000, guid: a35590280f79c5f4b9c7252464f38d2c, type: 2}
   _width: 6
   _height: 6
@@ -1519,6 +1527,9 @@ MonoBehaviour:
   _score: {fileID: 1374562608}
   _turns: {fileID: 145646150}
   _pauseMenu: {fileID: 364496966}
+  _turnsCounter: {fileID: 563490827}
+  _scoreCounter: {fileID: 563490828}
+  _gameState: {fileID: 1515515946}
 --- !u!4 &2022245663
 Transform:
   m_ObjectHideFlags: 0

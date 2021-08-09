@@ -7,16 +7,13 @@ using System;
 public static class Serialyzer
 {
     private const string _path = "BestScore";
-    private static readonly EventAggregator<int> _onTryChangeBestScore = new EventAggregator<int>();
-
-    public static void SubscribeTryChangeBestScore(Action<int> callback) => _onTryChangeBestScore.Subscribe(callback);
-    public static void UnsubscribeTryChangeBestScore(Action<int> callback) => _onTryChangeBestScore.UnSubscribe(callback);
+    public static event Action<int> OnTryChangeBestScore;
 
     public static bool TrySaveScore(int score)
     {
         int bestScore = LoadBestScore();
 
-        _onTryChangeBestScore.Publish(bestScore);
+        OnTryChangeBestScore?.Invoke(bestScore);
 
         if (score > bestScore)
         {
